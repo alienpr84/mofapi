@@ -18,7 +18,7 @@ class Server:
       request = Request(rawRequest)
       handler = self.router.findHandler(request.method, request.path)
       response = handler(request) if handler else Response("Not Found", 404)
-      clientSocket.sendall(response.to_http_response().encode())
+      clientSocket.sendall(response.httpResponse().encode())
     finally:
         clientSocket.close()
 

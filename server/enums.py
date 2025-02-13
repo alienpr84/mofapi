@@ -6,3 +6,7 @@ class HttpMethods(Enum):
   PUT='PUT'
   DELETE='DELETE'
   PATCH='PATCH'
+  
+class HttpContentTypeHeaders(Enum):
+  JSON_COTENT_TYPE = 'application/json'
+  TEXT_COTENT_TYPE = 'text/plain'
