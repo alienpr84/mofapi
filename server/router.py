@@ -1,43 +1,36 @@
+from .enums import HttpMethods
+
 class Router:
   def __init__(self):
     self.__routes = {}
 
   def get(self, path: str):
     def decorator(func):
-      self.__routes[(path, "GET")] = func
+      self.__routes[(path, HttpMethods.GET.value)] = func
       return func
     return decorator
 
   def post(self, path: str):
     def decorator(func):
-      self.__routes[(path, "POST")] = func
+      self.__routes[(path, HttpMethods.POST.value)] = func
       return func
     return decorator
 
   def put(self, path: str):
     def decorator(func):
-      self.__routes[(path, "PUT")] = func
+      self.__routes[(path, HttpMethods.PUT.value)] = func
       return func
     return decorator
 
   def delete(self, path: str):
     def decorator(func):
-      self.__routes[(path, "DELETE")] = func
+      self.__routes[(path, HttpMethods.DELETE.value)] = func
       return func
     return decorator
   
-  def find_handler(self, method, path):
-      print(f'method: {method}, path: {path}')
+  def findHandler(self, method, path):
+      # print(f'method: {method}, path: {path}')
       return self.__routes.get((path, method), None)
-  
-  # def handleRequest(self, request: Request):
-  #   path = request.path
-  #   method = request.method
-  #   route = self.__routes.get(path)
-    
-  #   if route and route['method'] == method:
-  #     return route['handler'](request)
-  #   return Response(404, { 'error':'Route not found.'})
   
   @property
   def routes(self):
