@@ -19,10 +19,10 @@ class Request:
       key, value = line.split(": ", 1)
       self.headers[key] = value
     
-    raw_body = "\r\n".join(lines[bodyIndex:])
+    rawBody = "\r\n".join(lines[bodyIndex:])
     try:
-      self.body = json.loads(raw_body) if raw_body else None
+      self.body = json.loads(rawBody) if rawBody else None
     except json.JSONDecodeError:
-      self.body = raw_body
+      self.body = rawBody
       
     # print(f'method: {self.method}, path: {self.path}, queryParams: {self.queryParams}, headers: {self.headers}, body: {self.body}')

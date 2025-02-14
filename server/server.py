@@ -15,9 +15,11 @@ class Server:
   def handleClient(self, clientSocket: Socket) -> None:
     try:
       rawRequest = clientSocket.recv(1024).decode()
+      print(rawRequest)
       request = Request(rawRequest)
+      response = Response("Not Found", 404)
       handler = self.router.findHandler(request.method, request.path)
-      response = handler(request) if handler else Response("Not Found", 404)
+      response = handler(request, response) if handler else response
       clientSocket.sendall(response.httpResponse().encode())
     finally:
         clientSocket.close()

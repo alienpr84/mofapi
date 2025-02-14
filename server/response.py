@@ -9,7 +9,6 @@ class Response:
     
   def status(self, status: HttpStatusCodes):
     self.statusCode = status
-    print(self.statusCode)
     return self
   
   def send(self, body: str | dict):

@@ -29,7 +29,6 @@ class Router:
     return decorator
   
   def findHandler(self, method, path):
-      # print(f'method: {method}, path: {path}')
       return self.__routes.get((path, method), None)
   
   @property
