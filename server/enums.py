@@ -7,6 +7,14 @@ class HttpMethods(Enum):
   DELETE='DELETE'
   PATCH='PATCH'
   
-class HttpContentTypeHeaders(Enum):
-  JSON_COTENT_TYPE = 'application/json'
-  TEXT_COTENT_TYPE = 'text/plain'
+class HttpHeadersContentType(Enum):
+  JSON = 'application/json'
+  TEXT = 'text/plain'
+  FORMDATA = 'multipart/form-data'
+  X_WWW_FORM_URLENCODED = 'application/x-www-form-urlencoded'
+  JAVASCRIPT = 'text/javascript'
+  HTML = 'text/html'
+  XML = ('application/xml', 'text/xml')
+  GRAPHQL = 'application/graphql'
+  BINARY = 'application/octet-stream'
+  

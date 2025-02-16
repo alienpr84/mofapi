@@ -11,18 +11,17 @@ class Server:
     self.host = host
     self.router = router
 
-
   def handleClient(self, clientSocket: Socket) -> None:
     try:
-      rawRequest = clientSocket.recv(1024).decode()
-      print(rawRequest)
+      rawRequest = clientSocket.recv(4096)
       request = Request(rawRequest)
+      print(request.body)
       response = Response("Not Found", 404)
       handler = self.router.findHandler(request.method, request.path)
       response = handler(request, response) if handler else response
       clientSocket.sendall(response.httpResponse().encode())
     finally:
-        clientSocket.close()
+      clientSocket.close()
 
   def listen(self, port: int = None, msg: str = None) -> None:
     port = port if port is not None else 8000
@@ -45,7 +44,7 @@ class Server:
           clientThread = threading.Thread(target=self.handleClient, args=(clientSocket, ))
           clientThread.start()
     except KeyboardInterrupt:
-        print("\nServer shutting down gracefully...")
-        isRunning = False
+      print("\nServer shutting down gracefully...")
+      isRunning = False
     finally:
-        serverSocket.close()
+      serverSocket.close()

@@ -1,5 +1,5 @@
 from .types import HttpStatusCodes
-from .enums import HttpContentTypeHeaders
+from .enums import HttpHeadersContentType
 
 class Response:
   def __init__(self, body="", status:HttpStatusCodes = 200, headers=None):
@@ -13,7 +13,7 @@ class Response:
   
   def send(self, body: str | dict):
     if isinstance(body, dict):
-      self.headers['Content-Type'] = HttpContentTypeHeaders.JSON_COTENT_TYPE.value
+      self.headers['Content-Type'] = HttpHeadersContentType.JSON.value
     self.body = body
     return self
 
