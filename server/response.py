@@ -17,7 +17,11 @@ class Response:
       self.headers['Content-Type'] = HttpHeadersContentType.JSON.value
       self.body = json.dumps(body)  # Convert dictionary to JSON
     else:
-      self.body = json.dumps(body)
+      # Check if the content type is form-data
+      if self.headers.get('Content-Type') == HttpHeadersContentType.FORMDATA.value:
+        self.body = body  # Do not convert to JSON
+      else:
+        self.body = json.dumps(body)  # Convert to JSON for other content types
     return self
 
   def httpResponse(self):

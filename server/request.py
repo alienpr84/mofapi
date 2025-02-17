@@ -9,54 +9,68 @@ class Request:
     self.method, self.path, self.queryParams, self.body, self.files = self.extractRequestData(rawRequest)
   
   def extractRequestData(self, rawRequest: bytes):
-    rawBodyParts = rawRequest.split(b"\r\n\r\n", 1)
-    headerLines = rawBodyParts[0].split(b"\r\n")
-    rawBody = rawBodyParts[1] if len(rawBodyParts) > 1 else b""
+    try:
+      rawRequestSplitted = rawRequest.split(b"\r\n\r\n", 1)
+      rawHeaders = rawRequestSplitted[0].split(b"\r\n")
+      rawBody = rawRequestSplitted[1] if len(rawRequestSplitted) > 1 else b""
 
-    # Extract the request line (e.g., "POST /upload?name=John HTTP/1.1")
-    requestLine = headerLines[0].decode()
-    method, fullPath, _ = requestLine.split(" ")
+      # Extract the request line (e.g., "POST /upload?name=John HTTP/1.1")
+      httpRequest = rawHeaders[0].decode()
+      headers = rawHeaders[1:]
+      method, fullPath, _ = httpRequest.split(" ")
 
-    # Extract path and query parameters
-    parsedUrl = urllib.parse.urlparse(fullPath)
-    path = parsedUrl.path
-    
-    queryParams = urllib.parse.parse_qs(parsedUrl.query)
-    
-    # extract headers
+      # Extract path and query parameters
+      parsedUrl = urllib.parse.urlparse(fullPath)
+      path = parsedUrl.path
+      queryParams = urllib.parse.parse_qs(parsedUrl.query)
+      
+      # Extract headers
+      headers = self.extractHeaders(headers)
+      
+      # Extract Body
+      contentTypeName = self.getHttpHeaderContentType(headers, rawBody)
+      body = self.extractBody(contentTypeName, rawBody)
+      
+      # Extract Files
+      files = self.extractFiles(contentTypeName, headers, rawBody, queryParams)
+      
+      return (method, path, queryParams, body, files)
+    except Exception as e:
+      print(f"Error extracting request data: {e}")
+      return None, None, None, None, None
+
+  def extractHeaders(self, rawHeaders):
     headers = {}
-    for line in headerLines:
-      if b':' in line:
-        key, value = line.split(b':', 1)
+    for header in rawHeaders:
+      if b':' in header:
+        key, value = header.split(b':', 1)
         headers[key.decode().strip().lower()] = value.decode().strip()
-      elif line == b'':
+      elif header == b'':
         break
-    
-    # For now we support only JSON and FORM-DATA
-    # Extract Body
-    contentTypeName = self.getHttpHeaderContentType(headers, rawBody)
-    body = {}
+    return headers
+
+  def extractBody(self, contentTypeName, rawBody):
     if contentTypeName == HttpHeadersContentType.JSON.name:
       try:
-        body = json.loads(rawBody.decode('utf-8'))
+        return json.loads(rawBody.decode('utf-8'))
       except json.JSONDecodeError as e:
         print(f'Json decode error: {e}')
-        body = None
       except AttributeError as e:
-        print(f"Attribute Error: {e}")  # If self.rawBody is None
-        body = None
-    
-    # Extract Files
+        print(f"Attribute Error: {e}")
+    return {}
+
+  def extractFiles(self, contentTypeName, headers, rawBody, queryParams):
     files = {}
     if contentTypeName == HttpHeadersContentType.FORMDATA.name:
-      boundary = re.search(r"boundary=(.+)", headers["content-type"])
+      boundary = re.search(r"boundary=(.+)", headers.get("content-type", ""))
       if not boundary:
-        return
+        print("Boundary not found in Content-Type header")
+        return files
 
       boundary = boundary.group(1).encode()
-      rawBodyParts = rawBody.split(b"--" + boundary)
+      rawRequestSplitted = rawBody.split(b"--" + boundary)
 
-      for part in rawBodyParts:
+      for part in rawRequestSplitted:
         if b'Content-Disposition: form-data;' in part:
           headers, content = part.split(b"\r\n\r\n", 1)
           content = content.rsplit(b"\r\n", 1)[0]  # Remove trailing boundary
@@ -72,14 +86,12 @@ class Request:
           elif nameMatch:
             fieldName = nameMatch.group(1).decode()
             queryParams[fieldName] = content.decode()
- 
-    return (method, path, queryParams, body, files)
+    return files
 
   def getHttpHeaderContentType(self, headers, rawBody) -> str:
     contentType = headers.get('content-type', '').lower()
     
-    #if it is a formdata we need to extract correctly the content type
-    
+    # If it is a form-data we need to extract correctly the content type
     if 'multipart/form-data' in contentType:
       contentType = 'multipart/form-data'
     
