@@ -13,9 +13,8 @@ class Server:
 
   def handleClient(self, clientSocket: Socket) -> None:
     try:
-      rawRequest = clientSocket.recv(4096)
+      rawRequest = clientSocket.recv(1024)
       request = Request(rawRequest)
-      print(request.body)
       response = Response("Not Found", 404)
       handler = self.router.findHandler(request.method, request.path)
       response = handler(request, response) if handler else response
