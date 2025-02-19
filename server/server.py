@@ -16,10 +16,18 @@ class Server:
       rawRequest = clientSocket.recv(4096)  # Increase buffer size to 4096 bytes
       if not rawRequest:
         return
+
       request = Request(rawRequest)
       response = Response("Not Found", 404)
-      handler = self.router.findHandler(request.method, request.path)
-      response = handler(request, response) if handler else response
+      
+      if not request.isRequestValid.get('state'):
+        status = request.isRequestValid.get('status')
+        message = request.isRequestValid.get('message')
+        response.status(status).send(message)
+      else:
+        handler = self.router.findHandler(request.method, request.path)
+        response = handler(request, response) if handler else response
+       
       clientSocket.sendall(response.httpResponse().encode())
     except Exception as e:
       print(f"Error handling client: {e}")

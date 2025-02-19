@@ -1,14 +1,25 @@
 import re
 import urllib.parse
-from .enums import HttpHeadersContentType
+from .enums import HttpHeadersContentType, HttpMethods
 import json
 
 class Request:
   def __init__(self, rawRequest: bytes):
     self.rawRequest = rawRequest
+    self.isRequestValid = {
+      'state': True,
+      'status': 200,
+      'message': 'Successful'
+    }
     self.method, self.path, self.queryParams, self.body, self.files = self.extractRequestData(rawRequest)
   
   def extractRequestData(self, rawRequest: bytes):
+    method = None
+    path = None
+    queryParams = None
+    body = None
+    files = None
+
     try:
       rawRequestSplitted = rawRequest.split(b"\r\n\r\n", 1)
       rawHeaders = rawRequestSplitted[0].split(b"\r\n")
@@ -26,18 +37,21 @@ class Request:
       
       # Extract headers
       headers = self.extractHeaders(headers)
+      contentTypeName = self.getHttpHeaderContentType(headers, rawBody)  
       
-      # Extract Body
-      contentTypeName = self.getHttpHeaderContentType(headers, rawBody)
-      body = self.extractBody(contentTypeName, rawBody)
-      
-      # Extract Files
-      files = self.extractFiles(contentTypeName, headers, rawBody, queryParams)
-      
-      return (method, path, queryParams, body, files)
+      if(method == HttpMethods.GET.value):
+        if(contentTypeName == HttpHeadersContentType.FORMDATA.name):
+          self.isRequestValid['state'] = False
+          self.isRequestValid['status'] = 400
+          self.isRequestValid['message'] = {'message': 'Not allowed multipart/form-data for http GET method.' }
+      elif(method == HttpMethods.POST.value): 
+        body = self.extractBody(contentTypeName, rawBody)
+        files = self.extractFiles(contentTypeName, headers, rawBody, queryParams)
+
     except Exception as e:
       print(f"Error extracting request data: {e}")
-      return None, None, None, None, None
+    finally:
+      return (method, path, queryParams, body, files)
 
   def extractHeaders(self, rawHeaders):
     headers = {}
